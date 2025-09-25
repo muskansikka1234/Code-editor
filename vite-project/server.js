@@ -1,24 +1,24 @@
 import express from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
-import path, { dirname } from 'path';
-import { fileURLToPath } from 'url';
+import cors from 'cors';
 import ACTIONS from './src/Actions.js';
-
-// Fix for __dirname in ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+  cors: {
+    origin: "*",   // ⚠️ allow all origins (good for testing, later replace with your frontend URL)
+    methods: ["GET", "POST"]
+  }
+});
 
-// Serve static frontend
-app.use(express.static(path.join(__dirname, 'dist')));
+app.use(cors());
+app.use(express.json());
 
-// Catch-all for SPA routes
-app.use((req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+// Health check route (useful for Render root URL)
+app.get("/", (req, res) => {
+  res.send("🚀 Backend is running successfully on Render!");
 });
 
 const userSocketMap = {};
@@ -33,7 +33,7 @@ function getAllConnectedClients(roomId) {
 }
 
 io.on('connection', (socket) => {
-  console.log('socket connected', socket.id);
+  console.log('✅ Socket connected:', socket.id);
 
   socket.on(ACTIONS.JOIN, ({ roomId, username }) => {
     userSocketMap[socket.id] = username;
@@ -69,4 +69,4 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log(`Listening on port ${PORT}`));
+server.listen(PORT, () => console.log(`🚀 Listening on port ${PORT}`));

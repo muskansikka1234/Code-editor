@@ -9,7 +9,7 @@ export const initSocket = async () => {
     };
 
     
-    const URL = import.meta.env.VITE_BACKEND_URL || ""; 
+    const URL = import.meta.env.REACT_APP_BACKEND_URL || ""; 
     console.log("🌐 Connecting to backend:", URL || "Current Host");
 
     return io(URL, options);

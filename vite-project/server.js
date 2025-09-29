@@ -2,25 +2,34 @@ import express from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import ACTIONS from './src/Actions.js';
+
+// ✅ Fix __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*",   // ⚠️ allow all origins (good for testing, later replace with your frontend URL)
-    methods: ["GET", "POST"]
-  }
+    origin: "*", // change to your frontend URL in production
+    methods: ["GET", "POST"],
+  },
 });
 
 app.use(cors());
 app.use(express.json());
 
-// Health check route (useful for Render root URL)
+// ✅ Serve frontend build (Vite dist folder)
+app.use(express.static(path.join(__dirname, "dist")));
+
 app.get("/", (req, res) => {
-  res.send("🚀 Backend is running successfully on Render!");
+  res.sendFile(path.join(__dirname, "dist", "index.html"));
 });
 
+// Socket.io logic
 const userSocketMap = {};
 
 function getAllConnectedClients(roomId) {
@@ -32,8 +41,8 @@ function getAllConnectedClients(roomId) {
   );
 }
 
-io.on('connection', (socket) => {
-  console.log('✅ Socket connected:', socket.id);
+io.on("connection", (socket) => {
+  console.log("✅ Socket connected:", socket.id);
 
   socket.on(ACTIONS.JOIN, ({ roomId, username }) => {
     userSocketMap[socket.id] = username;
@@ -56,7 +65,7 @@ io.on('connection', (socket) => {
     io.to(socketId).emit(ACTIONS.CODE_CHANGE, { code });
   });
 
-  socket.on('disconnecting', () => {
+  socket.on("disconnecting", () => {
     const rooms = [...socket.rooms];
     rooms.forEach((roomId) => {
       socket.in(roomId).emit(ACTIONS.DISCONNECTED, {
@@ -69,4 +78,4 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log(`🚀 Listening on port ${PORT}`));
+server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

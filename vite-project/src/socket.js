@@ -1,15 +1,16 @@
 import { io } from "socket.io-client";
 
 export const initSocket = async () => {
-  const options = {
-    forceNew: true, // ✅ correct key
-    reconnectionAttempts: Infinity,
-    timeout: 10000,
-    transports: ['websocket'], // prefer websocket
-  };
+    const options = {
+        forceNew: true,
+        reconnectionAttempts: Infinity,
+        timeout: 10000,
+        transports: ['websocket'],
+    };
 
-  const URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
-  console.log("🌐 Connecting to backend:", URL);
+    
+    const URL = import.meta.env.VITE_BACKEND_URL || ""; 
+    console.log("🌐 Connecting to backend:", URL || "Current Host");
 
-  return io(URL, options);
+    return io(URL, options);
 };
